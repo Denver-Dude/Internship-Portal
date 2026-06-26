@@ -1,4 +1,3 @@
-```javascript
 /* ===========================================
    Internship Portal
    app.js
@@ -22,17 +21,15 @@ const noResults = document.getElementById("noResults");
 const fieldFilter = document.getElementById("fieldFilter");
 
 // ===========================================
-// Load JSON
+// Initialize App
 // ===========================================
 
 document.addEventListener("DOMContentLoaded", () => {
-
     loadInternships();
-
 });
 
 // ===========================================
-// Fetch Internship Data
+// Load Internship Data
 // ===========================================
 
 async function loadInternships() {
@@ -41,10 +38,14 @@ async function loadInternships() {
 
         const response = await fetch("data/internships.json");
 
-        // Make internship data available globally
-        window.internships = await response.json();
+        if (!response.ok) {
+            throw new Error("Failed to load internship data.");
+        }
 
-        internships = window.internships;
+        internships = await response.json();
+
+        // Make available to other JS files
+        window.internships = internships;
 
         filteredInternships = [...internships];
 
@@ -52,35 +53,31 @@ async function loadInternships() {
 
         displayInternships(filteredInternships);
 
-    }
+    } catch (error) {
 
-    catch (error) {
-
-        console.error("Error loading internship data:", error);
+        console.error(error);
 
         internshipContainer.innerHTML = `
-
             <div class="col-12">
-
                 <div class="alert alert-danger">
-
                     Unable to load internship data.
-
                 </div>
-
             </div>
-
         `;
+
+        resultsInfo.textContent = "Unable to load internships.";
 
     }
 
 }
 
 // ===========================================
-// Populate Field Filter
+// Populate Field Dropdown
 // ===========================================
 
 function populateFieldFilter() {
+
+    fieldFilter.innerHTML = `<option value="">All Fields</option>`;
 
     const fields = [...new Set(internships.map(item => item.field))];
 
@@ -124,7 +121,10 @@ function displayInternships(data) {
 
     data.forEach(internship => {
 
-        internshipContainer.innerHTML += createCard(internship);
+        internshipContainer.insertAdjacentHTML(
+            "beforeend",
+            createCard(internship)
+        );
 
     });
 
@@ -139,6 +139,11 @@ function displayInternships(data) {
 function createCard(internship) {
 
     const saved = isBookmarked(internship.id);
+
+    const shortDescription =
+        internship.description.length > 90
+            ? internship.description.substring(0, 90) + "..."
+            : internship.description;
 
     return `
 
@@ -156,55 +161,37 @@ function createCard(internship) {
                     alt="${internship.company}">
 
                 <span class="stipend">
-
                     ₹${internship.stipend.toLocaleString()}
-
                 </span>
 
             </div>
 
             <h5 class="fw-bold">
-
                 ${internship.title}
-
             </h5>
 
             <h6 class="text-secondary">
-
                 ${internship.company}
-
             </h6>
 
             <div class="my-3">
 
                 <span class="badge badge-location">
-
                     ${internship.location}
-
                 </span>
 
                 <span class="badge badge-type">
-
                     ${internship.type}
-
                 </span>
 
                 <span class="badge badge-duration">
-
                     ${internship.duration}
-
                 </span>
 
             </div>
 
             <p class="card-description">
-
-                ${
-                    internship.description.length > 90
-                        ? internship.description.substring(0, 90) + "..."
-                        : internship.description
-                }
-
+                ${shortDescription}
             </p>
 
             <div class="d-grid gap-2 mt-4">
@@ -214,7 +201,6 @@ function createCard(internship) {
                     onclick="showDetails(${internship.id})">
 
                     <i class="bi bi-eye"></i>
-
                     View Details
 
                 </button>
@@ -268,4 +254,3 @@ function refreshCards() {
 window.getInternshipById = getInternshipById;
 window.displayInternships = displayInternships;
 window.refreshCards = refreshCards;
-```
